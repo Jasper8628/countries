@@ -43,15 +43,16 @@ function Home() {
       data: results,
       pages: Math.ceil(results.length / 10)
     });
-    setInput('');
-    setPageNum(1)
+    setPageNum(results.length ? 1 : 0)
   }
 
   const handleClear = () => {
+    setInput('');
     setDisplayCountries({
       data: countries,
       pages: Math.ceil(countries.length / 10)
     })
+    setPageNum(1);
   }
 
   const flatten = (o) => {
@@ -66,20 +67,21 @@ function Home() {
       </div>
       <div>
         <ul>
-          {displayCountries.data.slice((pageNum - 1) * 10, pageNum * 10).map(country => (
-            <h2 key={country.name}>
-              <Link to={{
-                pathname: '/country',
-                state: {
-                  name: country.name,
-                  flag: country.flag,
-                  population: country.population,
-                  demonym: country.demonym
-                }
-              }} >
-                {country.name}
-              </Link></h2>
-          ))}
+          {displayCountries.data.length ?
+            displayCountries.data.slice((pageNum - 1) * 10, pageNum * 10).map(country => (
+              <h2 key={country.name}>
+                <Link to={{
+                  pathname: '/country',
+                  state: {
+                    name: country.name,
+                    flag: country.flag,
+                    population: country.population,
+                    demonym: country.demonym
+                  }
+                }} >
+                  {country.name}
+                </Link></h2>
+            )) : <p>No countries found</p>}
 
         </ul>
       </div>
