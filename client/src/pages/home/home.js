@@ -51,6 +51,14 @@ function Home() {
     setPageNum(results.length ? 1 : 0)
   }
 
+  const flatten = (obj, target) => {
+    return Object.values(obj).some(v =>
+      v !== null && typeof v === 'object'
+        ? flatten(v) :
+        `${v}`.toLowerCase().search(`${target}`.trim()) !== -1
+    )
+  }
+
   const handleClear = () => {
     setInput('');
     setDisplayCountries({
@@ -69,13 +77,6 @@ function Home() {
     })
   }
 
-  const flatten = (obj, target) => {
-    return Object.values(obj).some(v =>
-      v !== null && typeof v === 'object'
-        ? flatten(v) :
-        `${v}`.toLowerCase().search(`${target}`.trim()) !== -1
-    )
-  }
 
   return (
     <div className='container'>
