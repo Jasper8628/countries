@@ -69,12 +69,14 @@ function Home() {
   }
 
   const handlePageLimit = (e) => {
-    const num = e.target.getAttribute('data')
+    const num = e.target.getAttribute('data');
+    const pages = Math.ceil(displayCountries.data.length / num);
     setPageLimit(num)
     setDisplayCountries({
       ...displayCountries,
-      pages: Math.ceil(displayCountries.data.length / num)
-    })
+      pages,
+    });
+    setPageNum(pageNum <= pages ? pageNum : pages)
   }
 
 
@@ -82,8 +84,8 @@ function Home() {
     <div className='container'>
       <div>
         <SearchBar input={input} handleInput={handleInput} handleSearch={handleSearch} />
-        <MainDisplay displayCountries={displayCountries} pageNum={pageNum} pageLimit={pageLimit} />
-        <Pagination displayCountries={displayCountries} pageNum={pageNum} paginate={paginate} handleClear={handleClear} />
+        <MainDisplay displayCountries={displayCountries.data} pageNum={pageNum} pageLimit={pageLimit} />
+        <Pagination pages={displayCountries.pages} pageNum={pageNum} paginate={paginate} handleClear={handleClear} />
       </div>
       <TogglePageLimit handlePageLimit={handlePageLimit} />
       <Loader loading={loading} />
