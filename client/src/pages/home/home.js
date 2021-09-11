@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Loader from '../../components/loader/loader';
-import { Link } from 'react-router-dom'
+import TogglePageLimit from '../../components/togglePageLimit/togglePageLimit';
+import Pagination from '../../components/pagination/pagination';
+import SearchBar from '../../components/searchBar/searchBar';
+import MainDisplay from '../../components/mainDisplay/mainDisplay';
 
 function Home() {
   const [countries, setCountries] = useState([]);
+  const [loading, setLoading] = useState('loading');
+  const [pageNum, setPageNum] = useState(1);
+  const [pageLimit, setPageLimit] = useState(10);
+  const [input, setInput] = useState('');
   const [displayCountries, setDisplayCountries] = useState({
     data: [],
     pages: 0
   });
-  const [loading, setLoading] = useState('loading');
-  const [pageNum, setPageNum] = useState(1);
-  const [input, setInput] = useState('');
+
   useEffect(() => {
     axios.get('https://restcountries.eu/rest/v2/all')
       .then(res => {
@@ -19,7 +24,7 @@ function Home() {
           setCountries(res.data);
           setDisplayCountries({
             data: res.data,
-            pages: Math.ceil(res.data.length / 10)
+            pages: Math.ceil(res.data.length / pageLimit)
           });
           setLoading('loaded');
 
@@ -38,10 +43,10 @@ function Home() {
   }
 
   const handleSearch = () => {
-    const results = countries.filter(c => flatten(c).includes(input.trim()));
+    const results = countries.filter(c => flatten(c, input));
     setDisplayCountries({
       data: results,
-      pages: Math.ceil(results.length / 10)
+      pages: Math.ceil(results.length / pageLimit)
     });
     setPageNum(results.length ? 1 : 0)
   }
@@ -50,50 +55,38 @@ function Home() {
     setInput('');
     setDisplayCountries({
       data: countries,
-      pages: Math.ceil(countries.length / 10)
+      pages: Math.ceil(countries.length / pageLimit)
     })
     setPageNum(1);
   }
 
-  const flatten = (o) => {
-    return [].concat(...Object.values(o).map(v => v !== null && typeof v === 'object' ? flatten(v) : `${v}`.toLowerCase()))
+  const handlePageLimit = (e) => {
+    const num = e.target.getAttribute('data')
+    setPageLimit(num)
+    setDisplayCountries({
+      ...displayCountries,
+      pages: Math.ceil(displayCountries.data.length / num)
+    })
+  }
+
+  const flatten = (obj, target) => {
+    return Object.values(obj).some(v =>
+      v !== null && typeof v === 'object'
+        ? flatten(v) :
+        `${v}`.toLowerCase().search(`${target}`.trim()) !== -1
+    )
   }
 
   return (
     <div className='container'>
       <div>
-        <input value={input} onChange={handleInput} />
-        <button onClick={handleSearch}>Search</button>
+        <SearchBar input={input} handleInput={handleInput} handleSearch={handleSearch} />
+        <MainDisplay displayCountries={displayCountries} pageNum={pageNum} pageLimit={pageLimit} />
+        <Pagination displayCountries={displayCountries} pageNum={pageNum} paginate={paginate} handleClear={handleClear} />
       </div>
-      <div>
-        <ul>
-          {displayCountries.data.length ?
-            displayCountries.data.slice((pageNum - 1) * 10, pageNum * 10).map(country => (
-              <h2 key={country.name}>
-                <Link to={{
-                  pathname: '/country',
-                  state: {
-                    name: country.name,
-                    flag: country.flag,
-                    population: country.population,
-                    demonym: country.demonym
-                  }
-                }} >
-                  {country.name}
-                </Link></h2>
-            )) : <p>No countries found</p>}
-
-        </ul>
-      </div>
-      <div>
-        <button className='fas fa-chevron-left' name='button-left' onClick={paginate} disabled={pageNum - 1 <= 0 ? true : false} />
-        <span>Page {pageNum}/{displayCountries.pages}</span>
-        <button className='fas fa-chevron-right' name='button-right' onClick={paginate} disabled={pageNum + 1 > displayCountries.pages ? true : false} />
-        <button onClick={handleClear}>Clear</button>
-      </div>
+      <TogglePageLimit handlePageLimit={handlePageLimit} />
       <Loader loading={loading} />
     </div>
-
   )
 }
 
